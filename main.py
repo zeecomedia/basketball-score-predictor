@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import joblib
 from confidenceIntervals import *
 from sklearn.preprocessing import StandardScaler
+import json
 
 
 app = Flask(__name__)
@@ -34,11 +35,40 @@ def predict():
         
         # Make prediction  
         prediction = loaded_model.predict(new_data)
+        final_score = estimate_elon_stats(value1, value2 , prediction)
+
+        result = final_score[0].tolist(), final_score[1].tolist(), final_score[2]
+       
+            
         
         # Return the prediction
-        return jsonify({'prediction': int(prediction[0])})
+        return json.dumps({'prediction': result})
     except Exception as e:
         return jsonify({'error': str(e)})
+    
+def estimate_elon_stats(elo_rating_team_a, elo_rating_team_b , prediction):
+    """
+    Estimates the third-quarter stats for two teams based on their Elo ratings.
+    Assumes a higher Elo rating indicates a stronger team likely to perform better.
+    """
+    
+    strength_metric_team_a = elo_rating_team_a / prediction
+    strength_metric_team_b = elo_rating_team_b / prediction
+
+    score_benchmark = 12
+
+    predicted_team = None
+    
+    away_3rdq = strength_metric_team_a * 100
+    home_3rdq = strength_metric_team_b * 100
+
+    if home_3rdq > score_benchmark:
+
+        predicted_team = "HOME"
+    else:
+        predicted_team = "AWAY"
+    
+    return abs(home_3rdq), abs(away_3rdq), predicted_team
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=True)
