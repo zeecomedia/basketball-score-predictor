@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify
 import joblib
 from confidenceIntervals import *
 from sklearn.preprocessing import StandardScaler
+from flask_cors import CORS
 import json
 
 
 app = Flask(__name__)
+CORS(app)
 
 # Load the model
 loaded_model = joblib.load('./basketball_score_prediction_model.pkl')
